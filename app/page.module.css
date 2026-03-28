@@ -1,0 +1,168 @@
+.dashboard {
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+.main {
+  margin-left: 220px;
+  padding-top: 56px;
+  min-height: 100vh;
+}
+
+.content {
+  padding: 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.pageHeader {
+  margin-bottom: 32px;
+}
+
+.pageTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2328;
+  margin-bottom: 4px;
+}
+
+.pageSubtitle {
+  font-size: 13px;
+  color: #8c959f;
+}
+
+.githubModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modalContent {
+  background: #ffffff;
+  border: 1px solid #d0d7de;
+  border-radius: 12px;
+  padding: 32px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2328;
+  margin-bottom: 8px;
+}
+
+.modalDescription {
+  font-size: 13px;
+  color: #656d76;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.inputGroup {
+  margin-bottom: 16px;
+}
+
+.inputLabel {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1f2328;
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  background: #ffffff;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1f2328;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #0969da;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.button {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.buttonSecondary {
+  background: #ffffff;
+  border: 1px solid #d0d7de;
+  color: #1f2328;
+}
+
+.buttonSecondary:hover {
+  background: #f6f8fa;
+}
+
+.buttonPrimary {
+  background: #1f2328;
+  border: 1px solid #1f2328;
+  color: #ffffff;
+}
+
+.buttonPrimary:hover {
+  background: #000000;
+}
+
+.buttonPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.demoButton {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: #ffffff;
+  border: 1px solid #d0d7de;
+  color: #1f2328;
+  transition: all 150ms ease;
+}
+
+.demoButton:hover {
+  background: #f6f8fa;
+}
+
+.note {
+  margin-top: 16px;
+  padding: 12px;
+  background: #f6f8fa;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #8c959f;
+  line-height: 1.5;
+}
+
+@media (max-width: 1024px) {
+  .main {
+    margin-left: 0;
+  }
+}

@@ -1,0 +1,153 @@
+.githubGrowth {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 300ms ease-out forwards;
+}
+
+.heroStats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.contributionGraph {
+  display: grid;
+  grid-template-columns: repeat(53, 1fr);
+  grid-template-rows: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.dayLabels {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-right: 6px;
+}
+
+.contributionCell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--bg-secondary);
+  transition: transform var(--transition-fast);
+}
+
+.contributionCell:hover { transform: scale(1.2); }
+
+.cellLevel0 { background: #f6f8fa; }
+.cellLevel1 { background: rgba(31, 35, 40, 0.2); }
+.cellLevel2 { background: rgba(31, 35, 40, 0.4); }
+.cellLevel3 { background: rgba(31, 35, 40, 0.7); }
+.cellLevel4 { background: #1f2328; }
+
+.commitsSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.commitList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.commitItem {
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.commitMessage {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.commitMeta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.commitMood {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.languageBars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.languageItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.languageName {
+  font-size: 12px;
+  color: var(--text-secondary);
+  width: 70px;
+}
+
+.languageBar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-secondary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.languageFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease-out;
+}
+
+.languagePercent {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  width: 35px;
+  text-align: right;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1024px) {
+  .heroStats { grid-template-columns: repeat(2, 1fr); }
+  .commitsSection { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .heroStats { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,176 @@
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 300ms ease-out forwards;
+}
+
+.heroSection {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.section {
+  background: #ffffff;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2328;
+  margin-bottom: 16px;
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.chart {
+  height: 200px;
+}
+
+.moodDisplay {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.moodLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #656d76;
+  margin-top: 12px;
+}
+
+.moodConfidence {
+  font-size: 12px;
+  color: #8c959f;
+  margin-top: 4px;
+}
+
+.productivityBreakdown {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.pieChart {
+  height: 180px;
+}
+
+.chartLegend {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #656d76;
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1f2328;
+}
+
+.legendValue {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  color: #1f2328;
+}
+
+.focusContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.focusRing {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+
+.focusRingSvg {
+  transform: rotate(-90deg);
+}
+
+.focusRingBg {
+  fill: none;
+  stroke: #d0d7de;
+  stroke-width: 8;
+}
+
+.focusRingProgress {
+  fill: none;
+  stroke: #1f2328;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease-out;
+}
+
+.focusRingCenter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.focusRingValue {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2328;
+}
+
+.focusStats {
+  display: flex;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.focusStat {
+  text-align: center;
+}
+
+.focusStatValue {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2328;
+}
+
+.focusStatLabel {
+  font-size: 11px;
+  color: #8c959f;
+  margin-top: 2px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1200px) {
+  .heroSection { grid-template-columns: repeat(2, 1fr); }
+  .mainGrid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .heroSection { grid-template-columns: 1fr; }
+  .productivityBreakdown { grid-template-columns: 1fr; }
+}

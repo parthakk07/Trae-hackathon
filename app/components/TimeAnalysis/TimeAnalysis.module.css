@@ -1,0 +1,95 @@
+.timeAnalysis {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 300ms ease-out forwards;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.section {
+  background: #ffffff;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2328;
+  margin-bottom: 16px;
+}
+
+.chart {
+  height: 200px;
+}
+
+.chartGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.patternSection {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.patternCard {
+  background: #ffffff;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.patternTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2328;
+  margin-bottom: 16px;
+}
+
+.dayBars {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 80px;
+}
+
+.dayBar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.bar {
+  width: 100%;
+  max-width: 24px;
+  border-radius: 3px 3px 0 0;
+  background: #1f2328;
+}
+
+.dayLabel {
+  font-size: 10px;
+  color: #8c959f;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1200px) {
+  .chartGrid { grid-template-columns: 1fr; }
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+  .patternSection { grid-template-columns: 1fr; }
+}
