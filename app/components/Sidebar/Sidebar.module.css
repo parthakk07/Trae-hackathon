@@ -228,8 +228,59 @@
   color: #1f2328 !important;
 }
 
-@media (max-width: 1024px) {
-  .sidebar {
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hamburger {
     display: none;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    bottom: 0;
+    width: 220px;
+    height: auto;
+    transform: none;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .navItem {
+    flex-direction: row;
+    gap: 10px;
+    padding: 8px 12px;
+    min-width: auto;
+    font-size: 13px;
+  }
+
+  .navLabel {
+    font-size: 13px;
+    text-align: left;
+  }
+
+  .section {
+    display: block;
+    margin-top: 20px;
+  }
+
+  .divider {
+    display: block;
+  }
+
+  .quickStats {
+    display: block;
+    margin-top: auto;
+  }
+}
+
+@media (min-width: 1025px) {
+  .hamburger {
+    display: none;
+  }
+
+  .sidebar {
+    display: flex;
   }
 }
