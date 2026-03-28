@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useStreamData, StreamData } from '@/lib/useStreamData';
 import { useExtensionData, formatExtensionTime } from '@/lib/useExtensionData';
 import styles from './RealTimeMonitor.module.css';
 
@@ -55,45 +56,44 @@ function classifyActivity(url: string | null, type: 'productive' | 'unproductive
   return { type: 'neutral', label: hostname };
 }
 
-export default function RealTimeMonitor() {
-  const { data, isConnected, lastSync, refresh } = useExtensionData(3000);
+interface RealTimeMonitorProps {
+  useStreaming?: boolean;
+}
+
+export default function RealTimeMonitor({ useStreaming = true }: RealTimeMonitorProps) {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
   const [currentActivity, setCurrentActivity] = useState<ActivityEntry | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [refreshInterval, setRefreshInterval] = useState(3);
-  const [lastErrorCheck, setLastErrorCheck] = useState<Date>(new Date());
 
-  const checkConnection = useCallback(() => {
-    if (!lastSync) {
-      setConnectionStatus('disconnected');
-      return;
-    }
+  const { data: streamData, isConnected: streamConnected, isConnecting: streamConnecting, error: streamError, reconnect: streamReconnect } = useStreamData({ enabled: useStreaming });
+  const { data: extensionData, isConnected: extensionConnected, lastSync: extensionLastSync, refresh: extensionRefresh } = useExtensionData(5000);
 
-    const secondsSinceSync = (Date.now() - lastSync.getTime()) / 1000;
-
-    if (secondsSinceSync > 30) {
-      setConnectionStatus('disconnected');
-      setErrorMessage('Extension not responding. Please check if the extension popup is open.');
-    } else if (secondsSinceSync > 10) {
-      setConnectionStatus('connecting');
-    } else {
-      setConnectionStatus('connected');
-      setErrorMessage(null);
-    }
-
-    if (Date.now() - lastErrorCheck.getTime() > 60000) {
-      setLastErrorCheck(new Date());
-    }
-  }, [lastSync, lastErrorCheck]);
+  const mergedData: StreamData | null = streamData || extensionData || null;
+  const isConnected = streamConnected || extensionConnected;
+  const isConnecting = streamConnecting || false;
 
   useEffect(() => {
-    if (data) {
+    if (isConnected) {
+      setConnectionStatus('connected');
+      setErrorMessage(null);
+    } else if (isConnecting) {
+      setConnectionStatus('connecting');
+    } else if (streamError || !mergedData) {
+      setConnectionStatus('disconnected');
+      setErrorMessage('Unable to connect. Please check your connection.');
+    } else {
+      setConnectionStatus('disconnected');
+    }
+  }, [isConnected, isConnecting, streamError, mergedData]);
+
+  useEffect(() => {
+    if (mergedData) {
       const entry: ActivityEntry = {
         id: Date.now().toString(),
-        type: data.productiveTime > data.unproductiveTime ? 'productive' : data.unproductiveTime > data.productiveTime ? 'unproductive' : 'neutral',
+        type: mergedData.productiveTime > mergedData.unproductiveTime ? 'productive' : mergedData.unproductiveTime > mergedData.productiveTime ? 'unproductive' : 'neutral',
         label: currentActivity?.label || 'Activity',
-        duration: Math.max(data.productiveTime, data.unproductiveTime),
+        duration: Math.max(mergedData.productiveTime, mergedData.unproductiveTime),
         timestamp: new Date()
       };
 
@@ -105,21 +105,13 @@ export default function RealTimeMonitor() {
         });
       }
     }
-  }, [data]);
-
-  useEffect(() => {
-    checkConnection();
-    const interval = setInterval(checkConnection, 2000);
-    return () => clearInterval(interval);
-  }, [checkConnection]);
+  }, [mergedData]);
 
   const handleReconnect = () => {
     setConnectionStatus('connecting');
     setErrorMessage('Reconnecting...');
-    refresh();
-    setTimeout(() => {
-      checkConnection();
-    }, 3000);
+    streamReconnect();
+    extensionRefresh();
   };
 
   const getStatusColor = () => {
@@ -140,9 +132,10 @@ export default function RealTimeMonitor() {
     }
   };
 
-  const totalTime = data ? data.productiveTime + data.unproductiveTime + data.neutralTime : 0;
-  const productivePercent = totalTime > 0 ? Math.round((data?.productiveTime || 0) / totalTime * 100) : 0;
-  const unproductivePercent = totalTime > 0 ? Math.round((data?.unproductiveTime || 0) / totalTime * 100) : 0;
+  const totalTime = mergedData ? mergedData.productiveTime + mergedData.unproductiveTime + mergedData.neutralTime : 0;
+  const productivePercent = totalTime > 0 ? Math.round((mergedData?.productiveTime || 0) / totalTime * 100) : 0;
+  const unproductivePercent = totalTime > 0 ? Math.round((mergedData?.unproductiveTime || 0) / totalTime * 100) : 0;
+  const neutralPercent = totalTime > 0 ? 100 - productivePercent - unproductivePercent : 0;
 
   return (
     <div className={styles.monitor}>
@@ -171,18 +164,20 @@ export default function RealTimeMonitor() {
 
       <div className={styles.connectionInfo}>
         <div className={styles.infoItem}>
-          <span className={styles.infoLabel}>Last Sync</span>
+          <span className={styles.infoLabel}>Data Source</span>
           <span className={styles.infoValue}>
-            {lastSync ? `${Math.round((Date.now() - lastSync.getTime()) / 1000)}s ago` : 'Never'}
+            {streamConnected ? 'Live Stream' : extensionConnected ? 'Chrome Extension' : 'Demo Data'}
+          </span>
+        </div>
+        <div className={styles.infoItem}>
+          <span className={styles.infoLabel}>Last Update</span>
+          <span className={styles.infoValue}>
+            {mergedData?.lastUpdate ? `${Math.round((Date.now() - mergedData.lastUpdate) / 1000)}s ago` : 'Never'}
           </span>
         </div>
         <div className={styles.infoItem}>
           <span className={styles.infoLabel}>Refresh</span>
-          <span className={styles.infoValue}>{refreshInterval}s</span>
-        </div>
-        <div className={styles.infoItem}>
-          <span className={styles.infoLabel}>Source</span>
-          <span className={styles.infoValue}>Chrome Extension</span>
+          <span className={styles.infoValue}>Live</span>
         </div>
       </div>
 
@@ -193,7 +188,7 @@ export default function RealTimeMonitor() {
             <span className={styles.statLabel}>Productive</span>
           </div>
           <div className={styles.statValue}>
-            {data ? formatExtensionTime(data.productiveTime) : '0m'}
+            {mergedData ? formatExtensionTime(mergedData.productiveTime) : '0m'}
           </div>
           <div className={styles.statBar}>
             <div
@@ -213,7 +208,7 @@ export default function RealTimeMonitor() {
             <span className={styles.statLabel}>Unproductive</span>
           </div>
           <div className={styles.statValue}>
-            {data ? formatExtensionTime(data.unproductiveTime) : '0m'}
+            {mergedData ? formatExtensionTime(mergedData.unproductiveTime) : '0m'}
           </div>
           <div className={styles.statBar}>
             <div
@@ -233,20 +228,18 @@ export default function RealTimeMonitor() {
             <span className={styles.statLabel}>Neutral</span>
           </div>
           <div className={styles.statValue}>
-            {data ? formatExtensionTime(data.neutralTime) : '0m'}
+            {mergedData ? formatExtensionTime(mergedData.neutralTime) : '0m'}
           </div>
           <div className={styles.statBar}>
             <div
               className={styles.statBarFill}
               style={{
-                width: `${100 - productivePercent - unproductivePercent}%`,
+                width: `${neutralPercent}%`,
                 backgroundColor: '#8c959f'
               }}
             />
           </div>
-          <div className={styles.statPercent}>
-            {totalTime > 0 ? 100 - productivePercent - unproductivePercent : 0}%
-          </div>
+          <div className={styles.statPercent}>{neutralPercent}%</div>
         </div>
 
         <div className={`${styles.statCard} ${styles.tabs}`}>
@@ -255,7 +248,7 @@ export default function RealTimeMonitor() {
             <span className={styles.statLabel}>Tab Switches</span>
           </div>
           <div className={styles.statValue}>
-            {data?.tabSwitches || 0}
+            {mergedData?.tabSwitches || 0}
           </div>
           <div className={styles.statHint}>
             Total switches today
@@ -285,7 +278,7 @@ export default function RealTimeMonitor() {
         </div>
       </div>
 
-      {connectionStatus === 'connected' && data && (
+      {connectionStatus === 'connected' && mergedData && (
         <div className={styles.liveIndicator}>
           <span className={styles.liveDot} />
           <span>Live tracking active</span>
