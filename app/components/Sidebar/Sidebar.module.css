@@ -76,6 +76,9 @@
   padding: 16px 12px;
   z-index: 50;
   transition: transform 300ms ease;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
 .navItem {
@@ -140,11 +143,12 @@
 }
 
 .quickStats {
-  margin-top: auto;
+  margin-top: 20px;
   padding: 12px;
   background: #f6f8fa;
   border: 1px solid #d0d7de;
   border-radius: 6px;
+  flex-shrink: 0;
 }
 
 .quickStatsTitle {
@@ -212,7 +216,8 @@
 
   .quickStats {
     display: block;
-    margin-top: auto;
+    margin-top: 20px;
+    flex-shrink: 0;
   }
 }
 
