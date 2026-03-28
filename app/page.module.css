@@ -89,7 +89,7 @@
 
 .input:focus {
   outline: none;
-  border-color: #0969da;
+  border-color: #1f2328;
 }
 
 .modalActions {
@@ -109,28 +109,28 @@
 }
 
 .buttonSecondary {
-  background: #ffffff;
-  border: 1px solid #d0d7de;
-  color: #1f2328;
+  background: #ffffff !important;
+  border: 1px solid #d0d7de !important;
+  color: #1f2328 !important;
 }
 
 .buttonSecondary:hover {
-  background: #f6f8fa;
+  background: #f6f8fa !important;
 }
 
 .buttonPrimary {
-  background: #1f2328;
-  border: 1px solid #1f2328;
-  color: #ffffff;
+  background: #1f2328 !important;
+  border: 1px solid #1f2328 !important;
+  color: #ffffff !important;
 }
 
 .buttonPrimary:hover {
-  background: #000000;
+  background: #000000 !important;
 }
 
 .buttonPrimary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
 }
 
 .demoButton {
@@ -141,14 +141,14 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  background: #ffffff;
-  border: 1px solid #d0d7de;
-  color: #1f2328;
+  background: #ffffff !important;
+  border: 1px solid #d0d7de !important;
+  color: #1f2328 !important;
   transition: all 150ms ease;
 }
 
 .demoButton:hover {
-  background: #f6f8fa;
+  background: #f6f8fa !important;
 }
 
 .note {
