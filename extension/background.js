@@ -185,41 +185,73 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'getData') {
-    chrome.storage.local.get(['dailyStats', 'tabSwitchCount', 'currentTab'], (result) => {
+  try {
+    if (request.action === 'getData') {
+      chrome.storage.local.get(['dailyStats', 'tabSwitchCount', 'currentTab'], (result) => {
+        try {
+          const data = {
+            dailyStats: result.dailyStats || defaultDailyStats,
+            tabSwitchCount: result.tabSwitchCount || 0,
+            currentTab: result.currentTab || null,
+            sharedData: JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+          };
+          sendResponse(data);
+        } catch (e) {
+          sendResponse({ error: e.message });
+        }
+      });
+      return true;
+    }
+
+    if (request.action === 'getCurrentTab') {
       const data = {
-        dailyStats: result.dailyStats || defaultDailyStats,
-        tabSwitchCount: result.tabSwitchCount || 0,
-        currentTab: result.currentTab || null,
-        sharedData: JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+        tab: currentTab,
+        category: currentTab ? categorizeWebsite(currentTab.url) : 'neutral'
       };
       sendResponse(data);
-    });
-    return true;
-  }
+      return true;
+    }
 
-  if (request.action === 'startTracking') {
-    chrome.storage.local.set({ isTracking: true });
-    sendResponse({ success: true });
-    return true;
-  }
+    if (request.action === 'startTracking') {
+      chrome.storage.local.set({ isTracking: true });
+      sendResponse({ success: true });
+      return true;
+    }
 
-  if (request.action === 'stopTracking') {
-    chrome.storage.local.set({ isTracking: false });
-    sendResponse({ success: true });
-    return true;
-  }
+    if (request.action === 'stopTracking') {
+      chrome.storage.local.set({ isTracking: false });
+      sendResponse({ success: true });
+      return true;
+    }
 
-  if (request.action === 'syncNow') {
-    chrome.storage.local.get(['dailyStats'], (result) => {
-      if (result.dailyStats) {
-        syncToSharedStorage(result.dailyStats);
-        sendResponse({ success: true, data: result.dailyStats });
-      } else {
-        sendResponse({ success: false });
-      }
-    });
-    return true;
+    if (request.action === 'resetStats') {
+      chrome.storage.local.set({
+        dailyStats: { ...defaultDailyStats, date: new Date().toDateString() },
+        tabSwitchCount: 0
+      });
+      syncToSharedStorage({ ...defaultDailyStats, date: new Date().toDateString() });
+      sendResponse({ success: true });
+      return true;
+    }
+
+    if (request.action === 'syncNow') {
+      chrome.storage.local.get(['dailyStats'], (result) => {
+        if (result.dailyStats) {
+          syncToSharedStorage(result.dailyStats);
+          sendResponse({ success: true, data: result.dailyStats });
+        } else {
+          sendResponse({ success: false });
+        }
+      });
+      return true;
+    }
+
+    sendResponse({ error: 'Unknown action' });
+    return false;
+  } catch (error) {
+    console.error('Message handler error:', error);
+    sendResponse({ error: error.message });
+    return false;
   }
 });
 

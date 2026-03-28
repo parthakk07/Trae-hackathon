@@ -60,6 +60,7 @@
   }
 
   function updateUI(data) {
+    if (!data) return;
     const stats = data.dailyStats || {};
     const productiveEl = document.getElementById('productive-time');
     const unproductiveEl = document.getElementById('unproductive-time');
@@ -73,11 +74,12 @@
   }
 
   function updateCurrentSite(tab, category) {
+    if (!tab) return;
     const titleEl = document.getElementById('site-title');
     const urlEl = document.getElementById('site-url');
     const categoryEl = document.getElementById('site-category');
 
-    if (tab && titleEl && urlEl && categoryEl) {
+    if (titleEl && urlEl && categoryEl) {
       titleEl.textContent = tab.title || 'Unknown';
       urlEl.textContent = tab.url || '-';
       categoryEl.textContent = category || 'neutral';
@@ -97,26 +99,47 @@
   setInterval(updateTimer, 1000);
 
   function loadStats() {
-    chrome.runtime.sendMessage({ action: 'getStats' }, (response) => {
-      if (response) {
-        updateUI(response);
-        if (response.currentTab) {
-          updateCurrentSite(response.currentTab, response.category);
+    try {
+      chrome.runtime.sendMessage({ action: 'getData' }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.warn('Extension context error:', chrome.runtime.lastError.message);
+          return;
         }
-      }
-    });
+        if (response) {
+          updateUI(response);
+          if (response.sharedData) {
+            updateUI({ dailyStats: response.sharedData });
+          }
+        }
+      });
+    } catch (e) {
+      console.warn('Failed to load stats:', e);
+    }
+  }
 
-    chrome.runtime.sendMessage({ action: 'getCurrentTab' }, (response) => {
-      if (response && response.tab) {
-        updateCurrentSite(response.tab, response.category);
-        siteStartTime = Date.now();
-      }
-    });
+  function getCurrentTab() {
+    try {
+      chrome.runtime.sendMessage({ action: 'getCurrentTab' }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.warn('Extension context error:', chrome.runtime.lastError.message);
+          return;
+        }
+        if (response && response.tab) {
+          const category = categorizeWebsite(response.tab.url);
+          updateCurrentSite(response.tab, category);
+          siteStartTime = Date.now();
+        }
+      });
+    } catch (e) {
+      console.warn('Failed to get current tab:', e);
+    }
   }
 
   loadStats();
+  getCurrentTab();
 
   setInterval(loadStats, 5000);
+  setInterval(getCurrentTab, 10000);
 
   document.getElementById('open-dashboard')?.addEventListener('click', () => {
     chrome.tabs.create({ url: 'http://localhost:3000' });
@@ -125,25 +148,37 @@
   document.getElementById('reset-link')?.addEventListener('click', (e) => {
     e.preventDefault();
     if (confirm('Reset all today\'s stats?')) {
-      chrome.runtime.sendMessage({ action: 'resetDaily' }, (response) => {
-        if (response?.success) {
-          updateUI({
-            dailyStats: {
-              productive: 0,
-              neutral: 0,
-              unproductive: 0,
-              tabSwitches: 0
-            }
-          });
-          siteStartTime = Date.now();
-        }
-      });
+      try {
+        chrome.runtime.sendMessage({ action: 'resetStats' }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.warn('Extension context error:', chrome.runtime.lastError.message);
+            return;
+          }
+          if (response?.success) {
+            updateUI({
+              dailyStats: {
+                productive: 0,
+                neutral: 0,
+                unproductive: 0,
+                tabSwitches: 0
+              }
+            });
+            siteStartTime = Date.now();
+          }
+        });
+      } catch (e) {
+        console.warn('Failed to reset stats:', e);
+      }
     }
   });
 
-  chrome.storage.onChanged.addListener((changes) => {
-    if (changes.dailyStats || changes.tabSwitchCount) {
-      loadStats();
-    }
-  });
+  try {
+    chrome.storage.onChanged.addListener((changes) => {
+      if (changes.dailyStats || changes.tabSwitchCount) {
+        loadStats();
+      }
+    });
+  } catch (e) {
+    console.warn('Storage listener error:', e);
+  }
 })();
