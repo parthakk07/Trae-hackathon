@@ -237,9 +237,11 @@ interface SetupGuideProps {
 }
 
 export default function SetupGuide({ onBack }: SetupGuideProps) {
-  const [activeSection, setActiveSection] = useState<string>('installation');
+  const [activeSection, setActiveSection] = useState<string>('download');
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set(['open-chrome']));
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set(['get-extension']));
 
   const toggleStep = (stepId: string) => {
     setExpandedSteps(prev => {
@@ -251,6 +253,51 @@ export default function SetupGuide({ onBack }: SetupGuideProps) {
       }
       return newSet;
     });
+  };
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    setDownloadProgress(0);
+
+    try {
+      setDownloadProgress(20);
+
+      const response = await fetch('/api/download-extension', {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-store'
+        }
+      });
+
+      setDownloadProgress(60);
+
+      if (!response.ok) {
+        throw new Error('Failed to download extension');
+      }
+
+      const blob = await response.blob();
+      setDownloadProgress(80);
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'dev-reality-extension.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      setDownloadProgress(100);
+      setTimeout(() => {
+        setIsDownloading(false);
+        setDownloadProgress(0);
+      }, 1500);
+    } catch (error) {
+      console.error('Download failed:', error);
+      setIsDownloading(false);
+      setDownloadProgress(0);
+      alert('Failed to download extension. Please try again.');
+    }
   };
 
   const filteredSections = setupGuideData.map(section => ({
@@ -280,6 +327,25 @@ export default function SetupGuide({ onBack }: SetupGuideProps) {
         <p className={styles.subtitle}>
           Complete guide to install, configure, and connect the Dev Reality Dashboard Chrome extension.
         </p>
+        <button
+          className={styles.downloadButton}
+          onClick={handleDownload}
+          disabled={isDownloading}
+        >
+          {isDownloading ? (
+            <>
+              <span className={styles.downloadSpinner}></span>
+              Downloading... {downloadProgress}%
+            </>
+          ) : (
+            <>📦 Download Extension (.zip)</>
+          )}
+        </button>
+        {isDownloading && (
+          <div className={styles.progressBar}>
+            <div className={styles.progressFill} style={{ width: `${downloadProgress}%` }}></div>
+          </div>
+        )}
       </div>
 
       <div className={styles.searchContainer}>
