@@ -156,7 +156,7 @@ export default function RealTimeMonitor() {
 
       {errorMessage && (
         <div className={styles.errorAlert}>
-          <span className={styles.errorIcon}>⚠️</span>
+          <span className={styles.errorIcon}>!</span>
           <span className={styles.errorText}>{errorMessage}</span>
         </div>
       )}
@@ -181,7 +181,7 @@ export default function RealTimeMonitor() {
       <div className={styles.statsGrid}>
         <div className={`${styles.statCard} ${styles.productive}`}>
           <div className={styles.statHeader}>
-            <span className={styles.statIcon}>✅</span>
+            <span className={styles.statIcon}>[+]</span>
             <span className={styles.statLabel}>Productive</span>
           </div>
           <div className={styles.statValue}>
@@ -195,7 +195,7 @@ export default function RealTimeMonitor() {
 
         <div className={`${styles.statCard} ${styles.unproductive}`}>
           <div className={styles.statHeader}>
-            <span className={styles.statIcon}>❌</span>
+            <span className={styles.statIcon}>[-]</span>
             <span className={styles.statLabel}>Unproductive</span>
           </div>
           <div className={styles.statValue}>
@@ -209,7 +209,7 @@ export default function RealTimeMonitor() {
 
         <div className={`${styles.statCard} ${styles.neutral}`}>
           <div className={styles.statHeader}>
-            <span className={styles.statIcon}>⚪</span>
+            <span className={styles.statIcon}>[o]</span>
             <span className={styles.statLabel}>Neutral</span>
           </div>
           <div className={styles.statValue}>
@@ -223,7 +223,7 @@ export default function RealTimeMonitor() {
 
         <div className={`${styles.statCard} ${styles.tabs}`}>
           <div className={styles.statHeader}>
-            <span className={styles.statIcon}>🔄</span>
+            <span className={styles.statIcon}>[~]</span>
             <span className={styles.statLabel}>Tab Switches</span>
           </div>
           <div className={styles.statValue}>{data?.tabSwitches || 0}</div>

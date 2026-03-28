@@ -338,7 +338,7 @@ export default function SetupGuide({ onBack }: SetupGuideProps) {
               Downloading... {downloadProgress}%
             </>
           ) : (
-            <>📦 Download Extension (.zip)</>
+            <>Download Extension (.zip)</>
           )}
         </button>
         {isDownloading && (
