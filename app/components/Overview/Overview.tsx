@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import { DashboardStats, GitHubData, MoodEntry } from '@/lib/types';
 import { formatDuration } from '@/lib/utils';
 import styles from './Overview.module.css';
+import RealTimeMonitor from '@/app/components/RealTimeMonitor/RealTimeMonitor';
 
 interface OverviewProps {
   stats: DashboardStats;
@@ -159,6 +160,10 @@ export default function Overview({ stats, githubData, currentMood }: OverviewPro
             </div>
           </div>
         </div>
+      </div>
+
+      <div className={styles.section}>
+        <RealTimeMonitor />
       </div>
     </div>
   );
