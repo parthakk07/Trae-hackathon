@@ -31,6 +31,9 @@ let currentTab = null;
 let tabSwitchCount = 0;
 let activeTabStartTime = null;
 let todayDate = new Date().toDateString();
+let intervalId = null;
+
+const STORAGE_KEY = 'devRealityData';
 
 const defaultDailyStats = {
   productive: 0,
@@ -86,7 +89,24 @@ function updateDailyStats(category, durationMinutes) {
 
     stats.lastUpdate = Date.now();
     chrome.storage.local.set({ dailyStats: stats });
+    syncToSharedStorage(stats);
   });
+}
+
+function syncToSharedStorage(dailyStats) {
+  const sharedData = {
+    productiveTime: dailyStats.productive,
+    unproductiveTime: dailyStats.unproductive,
+    neutralTime: dailyStats.neutral,
+    tabSwitches: dailyStats.tabSwitches,
+    lastUpdate: Date.now(),
+    source: 'extension'
+  };
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sharedData));
+  } catch (e) {
+    console.log('Shared storage sync:', e);
+  }
 }
 
 function initializeStorage() {
@@ -97,6 +117,9 @@ function initializeStorage() {
         dailyStats: { ...defaultDailyStats, date: new Date().toDateString() },
         isTracking: true
       });
+    }
+    if (result.dailyStats) {
+      syncToSharedStorage(result.dailyStats);
     }
   });
 }
@@ -161,72 +184,39 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-chrome.windows.onFocusChanged.addListener((windowId) => {
-  if (windowId === chrome.windows.WINDOW_ID_NONE) {
-    return;
-  }
-
-  chrome.tabs.query({ active: true, windowId: windowId }, (tabs) => {
-    if (tabs[0] && currentTab && tabs[0].id !== currentTab.id) {
-      if (activeTabStartTime && currentTab.url) {
-        const duration = Date.now() - activeTabStartTime;
-        const durationMinutes = Math.floor(duration / 60000);
-        const category = categorizeWebsite(currentTab.url);
-
-        if (durationMinutes > 0) {
-          updateDailyStats(category, durationMinutes);
-        }
-      }
-
-      tabSwitchCount++;
-      currentTab = {
-        id: tabs[0].id,
-        url: tabs[0].url,
-        title: tabs[0].title
-      };
-      activeTabStartTime = Date.now();
-
-      chrome.storage.local.set({ tabSwitchCount, currentTab: currentTab });
-    }
-  });
-});
-
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'getStats') {
-    chrome.storage.local.get(['tabSwitchCount', 'dailyStats', 'currentTab', 'isTracking'], (result) => {
-      sendResponse({
-        tabSwitchCount: result.tabSwitchCount || 0,
+  if (request.action === 'getData') {
+    chrome.storage.local.get(['dailyStats', 'tabSwitchCount', 'currentTab'], (result) => {
+      const data = {
         dailyStats: result.dailyStats || defaultDailyStats,
+        tabSwitchCount: result.tabSwitchCount || 0,
         currentTab: result.currentTab || null,
-        isTracking: result.isTracking !== false,
-        category: result.currentTab ? categorizeWebsite(result.currentTab.url) : 'neutral'
-      });
+        sharedData: JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+      };
+      sendResponse(data);
     });
     return true;
   }
 
-  if (request.action === 'resetDaily') {
-    chrome.storage.local.set({
-      tabSwitchCount: 0,
-      dailyStats: { ...defaultDailyStats, date: new Date().toDateString() }
-    });
+  if (request.action === 'startTracking') {
+    chrome.storage.local.set({ isTracking: true });
     sendResponse({ success: true });
     return true;
   }
 
-  if (request.action === 'updateTracking') {
-    chrome.storage.local.set({ isTracking: request.isTracking });
+  if (request.action === 'stopTracking') {
+    chrome.storage.local.set({ isTracking: false });
     sendResponse({ success: true });
     return true;
   }
 
-  if (request.action === 'getCurrentTab') {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]) {
-        const category = categorizeWebsite(tabs[0].url);
-        sendResponse({ tab: tabs[0], category });
+  if (request.action === 'syncNow') {
+    chrome.storage.local.get(['dailyStats'], (result) => {
+      if (result.dailyStats) {
+        syncToSharedStorage(result.dailyStats);
+        sendResponse({ success: true, data: result.dailyStats });
       } else {
-        sendResponse({ tab: null, category: 'neutral' });
+        sendResponse({ success: false });
       }
     });
     return true;
@@ -234,14 +224,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 setInterval(() => {
-  if (currentTab && activeTabStartTime) {
-    const duration = Date.now() - activeTabStartTime;
-    const durationMinutes = Math.floor(duration / 60000);
-
-    if (durationMinutes >= 1) {
-      const category = categorizeWebsite(currentTab.url);
-      updateDailyStats(category, 1);
-      activeTabStartTime = Date.now();
+  chrome.storage.local.get(['dailyStats'], (result) => {
+    if (result.dailyStats) {
+      syncToSharedStorage(result.dailyStats);
     }
-  }
-}, 60000);
+  });
+}, 30000);
+
+initializeStorage();
