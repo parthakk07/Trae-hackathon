@@ -140,6 +140,3 @@ npm start
 - The Chrome extension stores all tracking data locally
 - No external analytics or tracking
 
-## License
-
-MIT
