@@ -18,8 +18,32 @@ interface GuideSection {
 
 const setupGuideData: GuideSection[] = [
   {
+    id: 'download',
+    title: '1. Download Extension',
+    steps: [
+      {
+        id: 'get-extension',
+        title: 'Step 1: Get the Extension Folder',
+        content: 'Download or copy the /extension folder from the Dev Reality Dashboard repository. This folder contains all the files needed for the Chrome extension.',
+        tips: [
+          'The extension folder is located at: /extension/',
+          'It contains: manifest.json, background.js, content.js, and the /popup folder'
+        ]
+      },
+      {
+        id: 'extract-extension',
+        title: 'Step 2: Extract to Location',
+        content: 'Place the extension folder in an easily accessible location on your computer (e.g., Desktop or Documents). Keep the folder structure intact - do not move individual files.',
+        tips: [
+          'The folder must contain manifest.json at its root',
+          'Do not rename the folder after loading in Chrome'
+        ]
+      }
+    ]
+  },
+  {
     id: 'installation',
-    title: '1. Installation',
+    title: '2. Installation',
     steps: [
       {
         id: 'open-chrome',
@@ -33,10 +57,10 @@ const setupGuideData: GuideSection[] = [
       {
         id: 'load-unpacked',
         title: 'Step 2: Load Unpacked Extension',
-        content: 'Click the "Load unpacked" button (top left area). A file dialog will appear. Navigate to the Dev Reality Dashboard project folder and select the /extension subfolder.',
+        content: 'Click the "Load unpacked" button (top left area). A file dialog will appear. Navigate to where you placed the extension folder and select it.',
         tips: [
-          'Important: Select the folder that contains manifest.json, not the project root',
-          'The folder path should end with /extension'
+          'Important: Select the folder that contains manifest.json, not an individual file',
+          'The correct folder path will show files like manifest.json, background.js'
         ]
       },
       {
@@ -52,7 +76,7 @@ const setupGuideData: GuideSection[] = [
   },
   {
     id: 'configuration',
-    title: '2. Configuration',
+    title: '3. Configuration',
     steps: [
       {
         id: 'open-popup',
@@ -85,7 +109,7 @@ const setupGuideData: GuideSection[] = [
   },
   {
     id: 'dashboard-connection',
-    title: '3. Connect to Dashboard',
+    title: '4. Connect to Dashboard',
     steps: [
       {
         id: 'start-dashboard',
@@ -130,7 +154,7 @@ const setupGuideData: GuideSection[] = [
   },
   {
     id: 'permissions',
-    title: '4. Permissions & Privacy',
+    title: '5. Permissions & Privacy',
     steps: [
       {
         id: 'understand-permissions',
@@ -156,7 +180,7 @@ const setupGuideData: GuideSection[] = [
   },
   {
     id: 'troubleshooting',
-    title: '5. Troubleshooting',
+    title: '6. Troubleshooting',
     steps: [
       {
         id: 'extension-not-loading',
@@ -200,11 +224,12 @@ const setupGuideData: GuideSection[] = [
 ];
 
 const tableOfContents = [
-  { id: 'installation', title: '1. Installation' },
-  { id: 'configuration', title: '2. Configuration' },
-  { id: 'dashboard-connection', title: '3. Connect to Dashboard' },
-  { id: 'permissions', title: '4. Permissions & Privacy' },
-  { id: 'troubleshooting', title: '5. Troubleshooting' }
+  { id: 'download', title: '1. Download Extension' },
+  { id: 'installation', title: '2. Installation' },
+  { id: 'configuration', title: '3. Configuration' },
+  { id: 'dashboard-connection', title: '4. Connect to Dashboard' },
+  { id: 'permissions', title: '5. Permissions & Privacy' },
+  { id: 'troubleshooting', title: '6. Troubleshooting' }
 ];
 
 interface SetupGuideProps {
