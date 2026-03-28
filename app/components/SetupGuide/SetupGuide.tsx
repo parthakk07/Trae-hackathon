@@ -57,7 +57,7 @@ const setupGuideData: GuideSection[] = [
       {
         id: 'open-popup',
         title: 'Step 1: Open Extension Popup',
-        content: 'Click the Dev Reality Dashboard icon in your toolbar. The popup window will show your real-time tracking data. Look for the "Start Tracking" button to begin monitoring.',
+        content: 'Click the Dev Reality Dashboard icon in your toolbar. The popup window will show your real-time tracking data. Click "Start Tracking" to begin monitoring your web usage.',
         tips: [
           'Data refreshes automatically every 30 seconds',
           'Click "Start Tracking" to begin monitoring your web usage'
@@ -66,26 +66,71 @@ const setupGuideData: GuideSection[] = [
       {
         id: 'configure-sites',
         title: 'Step 2: Configure Productive Sites',
-        content: 'In the popup, navigate to Settings. Add URLs of websites you consider productive such as github.com, stackoverflow.com, and developer documentation sites. These will be categorized as productive time.',
+        content: 'In the popup, you will see your productive time, unproductive time, and tab switch count. The extension automatically categorizes websites based on built-in lists.',
         tips: [
-          'Enter domains without https:// (e.g., github.com)',
-          'Separate multiple sites with commas'
+          'Productive sites include: GitHub, Stack Overflow, documentation sites',
+          'Unproductive sites include: YouTube, Twitter, Netflix, etc.'
         ]
       },
       {
         id: 'set-goals',
-        title: 'Step 3: Set Daily Goals',
-        content: 'Configure your daily productive hours target and maximum tab switch limit. The extension will provide visual alerts when you approach or exceed these limits.',
+        title: 'Step 3: Monitor Your Stats',
+        content: 'View your daily statistics directly in the popup: productive time, neutral time, unproductive time, and total tab switches. These update in real-time as you browse.',
         tips: [
-          'Recommended: Start with 4-6 hours of daily productive time',
-          'Tab switch limit suggestion: 20-30 switches per hour indicates good focus'
+          'Stats are grouped by day (midnight to midnight)',
+          'Tab switches include both URL changes and tab switches between windows'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'dashboard-connection',
+    title: '3. Connect to Dashboard',
+    steps: [
+      {
+        id: 'start-dashboard',
+        title: 'Step 1: Start the Dashboard',
+        content: 'Start the Dev Reality Dashboard web application on your local machine. The dashboard runs at http://localhost:3000 by default.',
+        tips: [
+          'Run: npm run dev in the project directory',
+          'Make sure both extension and dashboard are in the same browser'
+        ]
+      },
+      {
+        id: 'auto-sync',
+        title: 'Step 2: Automatic Data Sync',
+        content: 'The extension automatically syncs tracking data to the dashboard via shared browser storage. When you open the dashboard with the extension running, data appears automatically.',
+        tips: [
+          'Data syncs every 30 seconds from extension',
+          'Dashboard polls every 5 seconds for new data',
+          'No additional configuration needed'
+        ]
+      },
+      {
+        id: 'verify-connection',
+        title: 'Step 3: Verify Connection',
+        content: 'In the dashboard, go to the Overview or Productivity tab. Your extension tracking data should appear alongside the GitHub and mood data. Look for the "Extension Connected" indicator.',
+        tips: [
+          'If data does not appear, refresh the dashboard page',
+          'Make sure the extension popup is open (required for sync)',
+          'Check browser console for any connection errors'
+        ]
+      },
+      {
+        id: 'standalone-mode',
+        title: 'Using Extension Standalone',
+        content: 'The extension works completely independently from the dashboard. All data is stored locally in Chrome. The dashboard simply reads and displays the same data.',
+        tips: [
+          'Extension does not require dashboard to be running',
+          'Data persists even after closing the browser',
+          'You can use either one without the other'
         ]
       }
     ]
   },
   {
     id: 'permissions',
-    title: '3. Permissions',
+    title: '4. Permissions & Privacy',
     steps: [
       {
         id: 'understand-permissions',
@@ -103,14 +148,15 @@ const setupGuideData: GuideSection[] = [
         content: 'All data collected by this extension is stored exclusively in your browser using localStorage. No information is transmitted to external servers or third parties. Your productivity data remains completely private and under your control.',
         tips: [
           'You can delete all data at any time by clearing browser storage',
-          'No analytics or tracking beacons are used'
+          'No analytics or tracking beacons are used',
+          'Data is never sent to any server'
         ]
       }
     ]
   },
   {
     id: 'troubleshooting',
-    title: '4. Troubleshooting',
+    title: '5. Troubleshooting',
     steps: [
       {
         id: 'extension-not-loading',
@@ -131,6 +177,16 @@ const setupGuideData: GuideSection[] = [
         ]
       },
       {
+        id: 'dashboard-not-showing',
+        title: 'Dashboard Not Showing Extension Data',
+        content: 'If the dashboard does not display extension data: (1) Make sure the extension popup is open, (2) Refresh the dashboard page, (3) Verify both are running in the same browser session.',
+        tips: [
+          'The extension must have its popup open for sync to occur',
+          'Try closing and reopening both the popup and dashboard',
+          'Check that localStorage is not disabled in browser settings'
+        ]
+      },
+      {
         id: 'clear-data',
         title: 'Clear Extension Data',
         content: 'To reset all tracking data while preserving settings: Open Chrome Extensions, find Dev Reality Dashboard, click "Details", then scroll to "Storage" and click "Clear storage".',
@@ -146,8 +202,9 @@ const setupGuideData: GuideSection[] = [
 const tableOfContents = [
   { id: 'installation', title: '1. Installation' },
   { id: 'configuration', title: '2. Configuration' },
-  { id: 'permissions', title: '3. Permissions' },
-  { id: 'troubleshooting', title: '4. Troubleshooting' }
+  { id: 'dashboard-connection', title: '3. Connect to Dashboard' },
+  { id: 'permissions', title: '4. Permissions & Privacy' },
+  { id: 'troubleshooting', title: '5. Troubleshooting' }
 ];
 
 interface SetupGuideProps {
@@ -196,7 +253,7 @@ export default function SetupGuide({ onBack }: SetupGuideProps) {
         </button>
         <h2 className={styles.title}>Extension Setup Guide</h2>
         <p className={styles.subtitle}>
-          Follow these step-by-step instructions to install and configure the Dev Reality Dashboard Chrome extension.
+          Complete guide to install, configure, and connect the Dev Reality Dashboard Chrome extension.
         </p>
       </div>
 
