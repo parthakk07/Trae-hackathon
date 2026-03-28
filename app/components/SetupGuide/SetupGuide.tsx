@@ -437,10 +437,10 @@ export default function SetupGuide({ onBack }: SetupGuideProps) {
         </p>
         <div className={styles.supportLinks}>
           <a href="/extension/README-EXTENSION.md" className={styles.supportLink}>
-            📖 Extension README
+            Extension README
           </a>
           <a href="https://github.com/parthakk07/Trae-hackathon" className={styles.supportLink}>
-            🐛 Report an Issue
+            Report an Issue
           </a>
         </div>
       </div>
