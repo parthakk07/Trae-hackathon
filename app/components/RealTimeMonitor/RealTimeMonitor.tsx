@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useStreamData, StreamData } from '@/lib/useStreamData';
-import { useExtensionData, formatExtensionTime } from '@/lib/useExtensionData';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { formatExtensionTime } from '@/lib/useExtensionData';
 import styles from './RealTimeMonitor.module.css';
 
 type ConnectionStatus = 'connected' | 'disconnected' | 'connecting' | 'error';
@@ -14,6 +13,18 @@ interface ActivityEntry {
   duration: number;
   timestamp: Date;
 }
+
+interface ExtensionStats {
+  productiveTime: number;
+  unproductiveTime: number;
+  neutralTime: number;
+  tabSwitches: number;
+  lastUpdate: number;
+  source?: string;
+}
+
+const STORAGE_KEY = 'devRealityData';
+const POLL_INTERVAL = 2000;
 
 const PRODUCTIVE_SITES = [
   'github.com', 'gitlab.com', 'bitbucket.org',
@@ -34,84 +45,74 @@ const UNPRODUCTIVE_SITES = [
   'spotify.com', 'tiktok.com'
 ];
 
-function classifyActivity(url: string | null, type: 'productive' | 'unproductive' | 'neutral'): { type: 'productive' | 'unproductive' | 'neutral'; label: string } {
-  if (!url) return { type: 'neutral', label: 'No activity' };
+function getDataFromStorage(): ExtensionStats | null {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) {
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.warn('Failed to read from localStorage:', e);
+  }
+  return null;
+}
 
-  const hostname = url.toLowerCase();
-
+function classifyHostname(hostname: string): 'productive' | 'unproductive' | 'neutral' {
   for (const site of PRODUCTIVE_SITES) {
-    if (hostname.includes(site)) {
-      return { type: 'productive', label: `Working on ${hostname}` };
-    }
+    if (hostname.includes(site)) return 'productive';
   }
-
   for (const site of UNPRODUCTIVE_SITES) {
-    if (hostname.includes(site)) {
-      return { type: 'unproductive', label: `Browsing ${hostname}` };
-    }
+    if (hostname.includes(site)) return 'unproductive';
   }
-
-  if (type === 'productive') return { type: 'productive', label: `Productive: ${hostname}` };
-  if (type === 'unproductive') return { type: 'unproductive', label: `Unproductive: ${hostname}` };
-  return { type: 'neutral', label: hostname };
+  return 'neutral';
 }
 
-interface RealTimeMonitorProps {
-  useStreaming?: boolean;
-}
-
-export default function RealTimeMonitor({ useStreaming = true }: RealTimeMonitorProps) {
+export default function RealTimeMonitor() {
+  const [data, setData] = useState<ExtensionStats | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
-  const [currentActivity, setCurrentActivity] = useState<ActivityEntry | null>(null);
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const { data: streamData, isConnected: streamConnected, isConnecting: streamConnecting, error: streamError, reconnect: streamReconnect } = useStreamData({ enabled: useStreaming });
-  const { data: extensionData, isConnected: extensionConnected, lastSync: extensionLastSync, refresh: extensionRefresh } = useExtensionData(5000);
-
-  const mergedData: StreamData | null = streamData || extensionData || null;
-  const isConnected = streamConnected || extensionConnected;
-  const isConnecting = streamConnecting || false;
-
-  useEffect(() => {
-    if (isConnected) {
+  const loadData = useCallback(() => {
+    const stored = getDataFromStorage();
+    if (stored) {
+      setData(stored);
       setConnectionStatus('connected');
       setErrorMessage(null);
-    } else if (isConnecting) {
-      setConnectionStatus('connecting');
-    } else if (streamError || !mergedData) {
-      setConnectionStatus('disconnected');
-      setErrorMessage('Unable to connect. Please check your connection.');
     } else {
       setConnectionStatus('disconnected');
     }
-  }, [isConnected, isConnecting, streamError, mergedData]);
+  }, []);
 
   useEffect(() => {
-    if (mergedData) {
+    loadData();
+    const interval = setInterval(loadData, POLL_INTERVAL);
+    return () => clearInterval(interval);
+  }, [loadData]);
+
+  useEffect(() => {
+    if (data && data.lastUpdate) {
       const entry: ActivityEntry = {
-        id: Date.now().toString(),
-        type: mergedData.productiveTime > mergedData.unproductiveTime ? 'productive' : mergedData.unproductiveTime > mergedData.productiveTime ? 'unproductive' : 'neutral',
-        label: currentActivity?.label || 'Activity',
-        duration: Math.max(mergedData.productiveTime, mergedData.unproductiveTime),
-        timestamp: new Date()
+        id: `${data.lastUpdate}-${Math.random().toString(36).substr(2, 9)}`,
+        type: data.productiveTime > data.unproductiveTime ? 'productive' : data.unproductiveTime > data.productiveTime ? 'unproductive' : 'neutral',
+        label: currentUrl ? classifyHostname(new URL(currentUrl).hostname) : 'Activity',
+        duration: Math.max(data.productiveTime, data.unproductiveTime),
+        timestamp: new Date(data.lastUpdate)
       };
 
       if (entry.duration > 0) {
-        setCurrentActivity(entry);
         setActivities(prev => {
-          const newActivities = [entry, ...prev].slice(0, 20);
-          return newActivities;
+          const exists = prev.some(a => a.id === entry.id);
+          if (exists) return prev;
+          return [entry, ...prev].slice(0, 20);
         });
       }
     }
-  }, [mergedData]);
+  }, [data, currentUrl]);
 
   const handleReconnect = () => {
-    setConnectionStatus('connecting');
-    setErrorMessage('Reconnecting...');
-    streamReconnect();
-    extensionRefresh();
+    loadData();
   };
 
   const getStatusColor = () => {
@@ -127,14 +128,20 @@ export default function RealTimeMonitor({ useStreaming = true }: RealTimeMonitor
     switch (connectionStatus) {
       case 'connected': return 'Connected';
       case 'connecting': return 'Connecting...';
-      case 'disconnected': return 'Disconnected';
+      case 'disconnected': return 'No Data';
       case 'error': return 'Error';
     }
   };
 
-  const totalTime = mergedData ? mergedData.productiveTime + mergedData.unproductiveTime + mergedData.neutralTime : 0;
-  const productivePercent = totalTime > 0 ? Math.round((mergedData?.productiveTime || 0) / totalTime * 100) : 0;
-  const unproductivePercent = totalTime > 0 ? Math.round((mergedData?.unproductiveTime || 0) / totalTime * 100) : 0;
+  const getDataSource = () => {
+    if (!data) return 'No Data';
+    if (data.source === 'extension') return 'Chrome Extension';
+    return 'Extension';
+  };
+
+  const totalTime = data ? data.productiveTime + data.unproductiveTime + data.neutralTime : 0;
+  const productivePercent = totalTime > 0 ? Math.round((data?.productiveTime || 0) / totalTime * 100) : 0;
+  const unproductivePercent = totalTime > 0 ? Math.round((data?.unproductiveTime || 0) / totalTime * 100) : 0;
   const neutralPercent = totalTime > 0 ? 100 - productivePercent - unproductivePercent : 0;
 
   return (
@@ -142,42 +149,32 @@ export default function RealTimeMonitor({ useStreaming = true }: RealTimeMonitor
       <div className={styles.header}>
         <h3 className={styles.title}>Real-Time Monitor</h3>
         <div className={styles.statusContainer}>
-          <span
-            className={styles.statusDot}
-            style={{ backgroundColor: getStatusColor() }}
-          />
+          <span className={styles.statusDot} style={{ backgroundColor: getStatusColor() }} />
           <span className={styles.statusText}>{getStatusText()}</span>
         </div>
       </div>
 
-      {errorMessage && connectionStatus !== 'connected' && (
+      {errorMessage && (
         <div className={styles.errorAlert}>
           <span className={styles.errorIcon}>⚠️</span>
           <span className={styles.errorText}>{errorMessage}</span>
-          {connectionStatus === 'disconnected' && (
-            <button className={styles.reconnectButton} onClick={handleReconnect}>
-              Reconnect
-            </button>
-          )}
         </div>
       )}
 
       <div className={styles.connectionInfo}>
         <div className={styles.infoItem}>
           <span className={styles.infoLabel}>Data Source</span>
-          <span className={styles.infoValue}>
-            {streamConnected ? 'Live Stream' : extensionConnected ? 'Chrome Extension' : 'Demo Data'}
-          </span>
+          <span className={styles.infoValue}>{getDataSource()}</span>
         </div>
         <div className={styles.infoItem}>
           <span className={styles.infoLabel}>Last Update</span>
           <span className={styles.infoValue}>
-            {mergedData?.lastUpdate ? `${Math.round((Date.now() - mergedData.lastUpdate) / 1000)}s ago` : 'Never'}
+            {data?.lastUpdate ? `${Math.round((Date.now() - data.lastUpdate) / 1000)}s ago` : 'Never'}
           </span>
         </div>
         <div className={styles.infoItem}>
           <span className={styles.infoLabel}>Refresh</span>
-          <span className={styles.infoValue}>Live</span>
+          <span className={styles.infoValue}>2s</span>
         </div>
       </div>
 
@@ -188,16 +185,10 @@ export default function RealTimeMonitor({ useStreaming = true }: RealTimeMonitor
             <span className={styles.statLabel}>Productive</span>
           </div>
           <div className={styles.statValue}>
-            {mergedData ? formatExtensionTime(mergedData.productiveTime) : '0m'}
+            {data ? formatExtensionTime(data.productiveTime) : '0m'}
           </div>
           <div className={styles.statBar}>
-            <div
-              className={styles.statBarFill}
-              style={{
-                width: `${productivePercent}%`,
-                backgroundColor: '#1f2328'
-              }}
-            />
+            <div className={styles.statBarFill} style={{ width: `${productivePercent}%`, backgroundColor: '#1f2328' }} />
           </div>
           <div className={styles.statPercent}>{productivePercent}%</div>
         </div>
@@ -208,16 +199,10 @@ export default function RealTimeMonitor({ useStreaming = true }: RealTimeMonitor
             <span className={styles.statLabel}>Unproductive</span>
           </div>
           <div className={styles.statValue}>
-            {mergedData ? formatExtensionTime(mergedData.unproductiveTime) : '0m'}
+            {data ? formatExtensionTime(data.unproductiveTime) : '0m'}
           </div>
           <div className={styles.statBar}>
-            <div
-              className={styles.statBarFill}
-              style={{
-                width: `${unproductivePercent}%`,
-                backgroundColor: '#656d76'
-              }}
-            />
+            <div className={styles.statBarFill} style={{ width: `${unproductivePercent}%`, backgroundColor: '#656d76' }} />
           </div>
           <div className={styles.statPercent}>{unproductivePercent}%</div>
         </div>
@@ -228,16 +213,10 @@ export default function RealTimeMonitor({ useStreaming = true }: RealTimeMonitor
             <span className={styles.statLabel}>Neutral</span>
           </div>
           <div className={styles.statValue}>
-            {mergedData ? formatExtensionTime(mergedData.neutralTime) : '0m'}
+            {data ? formatExtensionTime(data.neutralTime) : '0m'}
           </div>
           <div className={styles.statBar}>
-            <div
-              className={styles.statBarFill}
-              style={{
-                width: `${neutralPercent}%`,
-                backgroundColor: '#8c959f'
-              }}
-            />
+            <div className={styles.statBarFill} style={{ width: `${neutralPercent}%`, backgroundColor: '#8c959f' }} />
           </div>
           <div className={styles.statPercent}>{neutralPercent}%</div>
         </div>
@@ -247,12 +226,8 @@ export default function RealTimeMonitor({ useStreaming = true }: RealTimeMonitor
             <span className={styles.statIcon}>🔄</span>
             <span className={styles.statLabel}>Tab Switches</span>
           </div>
-          <div className={styles.statValue}>
-            {mergedData?.tabSwitches || 0}
-          </div>
-          <div className={styles.statHint}>
-            Total switches today
-          </div>
+          <div className={styles.statValue}>{data?.tabSwitches || 0}</div>
+          <div className={styles.statHint}>Total switches today</div>
         </div>
       </div>
 
@@ -264,21 +239,19 @@ export default function RealTimeMonitor({ useStreaming = true }: RealTimeMonitor
               <div key={activity.id} className={`${styles.activityItem} ${styles[activity.type]}`}>
                 <span className={styles.activityDot} />
                 <span className={styles.activityLabel}>{activity.label}</span>
-                <span className={styles.activityDuration}>
-                  {formatExtensionTime(activity.duration)}
-                </span>
+                <span className={styles.activityDuration}>{formatExtensionTime(activity.duration)}</span>
               </div>
             ))
           ) : (
             <div className={styles.emptyState}>
               <p>No activities recorded yet.</p>
-              <p className={styles.emptyHint}>Start browsing to see your activities appear here.</p>
+              <p className={styles.emptyHint}>Open the Chrome extension to start tracking.</p>
             </div>
           )}
         </div>
       </div>
 
-      {connectionStatus === 'connected' && mergedData && (
+      {connectionStatus === 'connected' && data && (
         <div className={styles.liveIndicator}>
           <span className={styles.liveDot} />
           <span>Live tracking active</span>
