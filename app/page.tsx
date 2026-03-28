@@ -9,6 +9,7 @@ import Productivity from '@/app/components/Productivity/Productivity';
 import GitHubGrowth from '@/app/components/GitHubGrowth/GitHubGrowth';
 import MoodDetector from '@/app/components/MoodDetector/MoodDetector';
 import TimeAnalysis from '@/app/components/TimeAnalysis/TimeAnalysis';
+import SetupGuide from '@/app/components/SetupGuide/SetupGuide';
 import { generateMockGitHubData } from '@/lib/utils';
 import { fetchGitHubData } from '@/lib/github';
 import { GitHubData, MoodEntry, DashboardStats } from '@/lib/types';
@@ -32,6 +33,7 @@ export default function Dashboard() {
   const [githubUsername, setGithubUsername] = useState('');
   const [githubToken, setGithubToken] = useState('');
   const [githubData, setGithubData] = useState<GitHubData | undefined>();
+  const [githubError, setGithubError] = useState<string | null>(null);
   const [currentMood] = useState<MoodEntry>({
     date: new Date(),
     mood: 'focused',
@@ -64,14 +66,15 @@ export default function Dashboard() {
   }, []);
 
   const fetchRealGitHubData = async (username: string, token?: string) => {
-    if (token) {
-      const data = await fetchGitHubData(token, username);
-      if (data) {
-        setGithubData(data);
-        return;
-      }
+    setGithubError(null);
+    const data = await fetchGitHubData(token, username, (error) => {
+      setGithubError(error.message);
+    });
+    if (data) {
+      setGithubData(data);
+    } else if (!githubError) {
+      setGithubData(generateMockGitHubData(username));
     }
-    setGithubData(generateMockGitHubData(username));
   };
 
   const handleGithubSubmit = async () => {
@@ -104,6 +107,8 @@ export default function Dashboard() {
     setShowGithubModal(false);
   };
 
+  const [showSetupGuide, setShowSetupGuide] = useState(false);
+
   const renderContent = () => {
     switch (activeSection) {
       case 'overview':
@@ -113,24 +118,27 @@ export default function Dashboard() {
       case 'github':
         return <GitHubGrowth data={githubData} />;
       case 'mood':
-        return <MoodDetector currentMood={currentMood} />;
+        return <MoodDetector currentMood={currentMood} githubData={githubData} />;
       case 'analytics':
         return <TimeAnalysis />;
       case 'settings':
+        if (showSetupGuide) {
+          return <SetupGuide onBack={() => setShowSetupGuide(false)} />;
+        }
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '480px' }}>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px' }}>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '16px' }}>GitHub Connection</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ background: '#ffffff', border: '1px solid #d0d7de', borderRadius: '8px', padding: '24px' }}>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: '#1f2328', marginBottom: '16px' }}>GitHub Connection</div>
               <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Status</div>
-                <div style={{ fontSize: '13px', color: githubConnected ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                <div style={{ fontSize: '12px', color: '#8c959f', marginBottom: '4px' }}>Status</div>
+                <div style={{ fontSize: '13px', color: githubConnected ? '#1f2328' : '#8c959f' }}>
                   {githubConnected ? `Connected as ${githubUsername}` : 'Not connected'}
                 </div>
               </div>
               {githubConnected && (
                 <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Contributions</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'JetBrains Mono' }}>
+                  <div style={{ fontSize: '12px', color: '#8c959f', marginBottom: '4px' }}>Contributions</div>
+                  <div style={{ fontSize: '13px', color: '#1f2328', fontFamily: 'JetBrains Mono' }}>
                     {githubData?.totalContributions || 0} total
                   </div>
                 </div>
@@ -140,10 +148,10 @@ export default function Dashboard() {
                 style={{
                   width: '100%',
                   padding: '10px 16px',
-                  background: '#000',
-                  border: '1px solid #333',
+                  background: '#1f2328',
+                  border: '1px solid #1f2328',
                   borderRadius: '6px',
-                  color: '#fff',
+                  color: '#ffffff',
                   fontSize: '13px',
                   fontWeight: '500',
                   cursor: 'pointer',
@@ -158,14 +166,30 @@ export default function Dashboard() {
               </button>
             </div>
 
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px' }}>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '16px' }}>Chrome Extension</div>
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+            <div style={{ background: '#ffffff', border: '1px solid #d0d7de', borderRadius: '8px', padding: '24px' }}>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: '#1f2328', marginBottom: '16px' }}>Chrome Extension</div>
+              <div style={{ fontSize: '13px', color: '#656d76', marginBottom: '16px' }}>
                 Install the Chrome extension to track web usage and tab switches in real-time.
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '6px' }}>
+              <div style={{ fontSize: '12px', color: '#656d76', padding: '12px', background: '#f6f8fa', borderRadius: '6px', marginBottom: '12px' }}>
                 Extension folder: <code style={{ fontFamily: 'JetBrains Mono' }}>/extension</code>
               </div>
+              <button
+                onClick={() => setShowSetupGuide(true)}
+                style={{
+                  width: '100%',
+                  padding: '10px 16px',
+                  background: '#1f2328',
+                  border: '1px solid #1f2328',
+                  borderRadius: '6px',
+                  color: '#ffffff',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                View Setup Guide
+              </button>
             </div>
           </div>
         );
@@ -203,7 +227,7 @@ export default function Dashboard() {
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
               <div className={styles.modalTitle}>Connect GitHub</div>
               <p className={styles.modalDescription}>
-                Enter your GitHub username and optional personal access token to fetch real contribution data.
+                Enter your GitHub username to fetch your contribution data.
               </p>
               <div className={styles.inputGroup}>
                 <label className={styles.inputLabel}>GitHub Username</label>
@@ -216,7 +240,7 @@ export default function Dashboard() {
                 />
               </div>
               <div className={styles.inputGroup}>
-                <label className={styles.inputLabel}>Personal Access Token (optional - for private repos)</label>
+                <label className={styles.inputLabel}>Personal Access Token (optional)</label>
                 <input
                   type="password"
                   className={styles.input}
@@ -225,12 +249,49 @@ export default function Dashboard() {
                   onChange={(e) => setGithubToken(e.target.value)}
                 />
               </div>
+              {githubError && (
+                <div style={{
+                  padding: '10px 12px',
+                  background: '#fef2f2',
+                  border: '1px solid #d0d7de',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  color: '#1f2328',
+                  marginBottom: '16px'
+                }}>
+                  {githubError}
+                </div>
+              )}
               <div className={styles.modalActions}>
-                <button className={styles.buttonSecondary} onClick={() => setShowGithubModal(false)}>
+                <button
+                  style={{
+                    flex: 1,
+                    padding: '10px 16px',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    background: '#ffffff',
+                    border: '1px solid #d0d7de',
+                    color: '#1f2328',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setShowGithubModal(false)}
+                >
                   Cancel
                 </button>
                 <button
-                  className={styles.buttonPrimary}
+                  style={{
+                    flex: 1,
+                    padding: '10px 16px',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    background: '#1f2328',
+                    border: '1px solid #1f2328',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    opacity: !githubUsername ? 0.5 : 1
+                  }}
                   onClick={handleGithubSubmit}
                   disabled={!githubUsername}
                 >
@@ -238,12 +299,23 @@ export default function Dashboard() {
                   Connect
                 </button>
               </div>
-              <button className={styles.demoButton} onClick={handleDemoMode}>
+              <button
+                style={{
+                  width: '100%',
+                  marginTop: '12px',
+                  padding: '10px 16px',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  background: '#f6f8fa',
+                  border: '1px solid #d0d7de',
+                  color: '#1f2328',
+                  cursor: 'pointer'
+                }}
+                onClick={handleDemoMode}
+              >
                 Try Demo Mode
               </button>
-              <div className={styles.note}>
-                Without a token, demo data will be shown. With a token, your real public contribution data will be fetched.
-              </div>
             </div>
           </div>
         )}

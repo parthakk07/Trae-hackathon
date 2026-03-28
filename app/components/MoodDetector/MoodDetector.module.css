@@ -134,6 +134,58 @@
   color: var(--text-muted);
 }
 
+.emptyState {
+  text-align: center;
+  padding: 24px 12px;
+}
+
+.emptyState p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.emptyHint {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+}
+
+.insightsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.insightItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.insightRank {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  width: 24px;
+}
+
+.insightMood {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.insightPercent {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
